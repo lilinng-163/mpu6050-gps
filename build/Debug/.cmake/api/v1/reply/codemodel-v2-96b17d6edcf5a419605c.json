@@ -1,0 +1,231 @@
+{
+	"configurations" : 
+	[
+		{
+			"abstractTargets" : 
+			[
+				{
+					"directoryIndex" : 3,
+					"id" : "etl::@e90c1fe6f63af0cb5c20",
+					"jsonFile" : "target-etl-Debug-8307739fc9eeb8dc4168.json",
+					"name" : "etl",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "stm32cubemx::@768a070a0fe75716b479",
+					"jsonFile" : "target-stm32cubemx-Debug-682d9addb817f9cab3a8.json",
+					"name" : "stm32cubemx",
+					"projectIndex" : 0
+				}
+			],
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"jsonFile" : "directory-.-Debug-f040eec181a89de70dbe.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"abstractTargetIndexes" : 
+					[
+						1
+					],
+					"build" : "cmake/stm32cubemx",
+					"jsonFile" : "directory-cmake.stm32cubemx-Debug-720efe0a241989607e76.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cmake/stm32cubemx",
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"build" : "MiddleWare/FreeRTOS",
+					"jsonFile" : "directory-MiddleWare.FreeRTOS-Debug-0f427a3d6bf0f1b6f5b7.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "MiddleWare/FreeRTOS",
+					"targetIndexes" : 
+					[
+						3
+					]
+				},
+				{
+					"abstractTargetIndexes" : 
+					[
+						0
+					],
+					"build" : "Lib/ETL",
+					"jsonFile" : "directory-Lib.ETL-Debug-9ae778e388f0301fb686.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "Lib/ETL"
+				},
+				{
+					"build" : "Soft_Drivers",
+					"jsonFile" : "directory-Soft_Drivers-Debug-2ae49e0292e0bd74b820.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "Soft_Drivers",
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"build" : "Devices",
+					"jsonFile" : "directory-Devices-Debug-84d23a85b080e9a056a6.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "Devices",
+					"targetIndexes" : 
+					[
+						2
+					]
+				},
+				{
+					"build" : "Application",
+					"jsonFile" : "directory-Application-Debug-e4454e4cfd21f2790ba4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.22"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "Application",
+					"targetIndexes" : 
+					[
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"abstractTargetIndexes" : 
+					[
+						0,
+						1
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"name" : "project1_stm32",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 1,
+					"id" : "STM32_Drivers::@768a070a0fe75716b479",
+					"jsonFile" : "target-STM32_Drivers-Debug-ca469ce75dd9ce968373.json",
+					"name" : "STM32_Drivers",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "app::@66720fd680612643f4de",
+					"jsonFile" : "target-app-Debug-2bb1d012f800d682269f.json",
+					"name" : "app",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "devices::@d8ea1c4a96fc9577882a",
+					"jsonFile" : "target-devices-Debug-066663a265d5f6b85b37.json",
+					"name" : "devices",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "freertos::@64bef87c27fb7a86a8e0",
+					"jsonFile" : "target-freertos-Debug-e394789d7f248f49d8d8.json",
+					"name" : "freertos",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "project1_stm32::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-project1_stm32-Debug-0140752d2a1fb1873f64.json",
+					"name" : "project1_stm32",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "soft_drivers::@e32d1b8d0d138086c1b8",
+					"jsonFile" : "target-soft_drivers-Debug-8d6889de5607f32bc5bb.json",
+					"name" : "soft_drivers",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "E:/demo/project1/stm32/project1_stm32/build/Debug",
+		"source" : "E:/demo/project1/stm32/project1_stm32"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 10
+	}
+}

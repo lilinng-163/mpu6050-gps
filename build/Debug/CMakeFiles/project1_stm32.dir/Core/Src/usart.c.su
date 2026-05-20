@@ -1,0 +1,6 @@
+E:/demo/project1/stm32/project1_stm32/Core/Src/usart.c:31:6:MX_USART1_Init	8	static
+E:/demo/project1/stm32/project1_stm32/Core/Src/usart.c:61:6:MX_USART2_UART_Init	8	static
+E:/demo/project1/stm32/project1_stm32/Core/Src/usart.c:89:6:HAL_USART_MspInit	40	static
+E:/demo/project1/stm32/project1_stm32/Core/Src/usart.c:123:6:HAL_UART_MspInit	40	static
+E:/demo/project1/stm32/project1_stm32/Core/Src/usart.c:159:6:HAL_USART_MspDeInit	16	static
+E:/demo/project1/stm32/project1_stm32/Core/Src/usart.c:183:6:HAL_UART_MspDeInit	16	static

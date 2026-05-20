@@ -1,0 +1,2 @@
+E:/demo/project1/stm32/project1_stm32/Application/Src/app.cpp:12:12:int start_task(void*)	16	static
+E:/demo/project1/stm32/project1_stm32/Application/Src/app.cpp:21:5:int start_freertos()	24	static

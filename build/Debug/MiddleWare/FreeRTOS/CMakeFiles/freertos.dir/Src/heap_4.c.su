@@ -1,0 +1,8 @@
+E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/heap_4.c:115:8:pvPortMalloc	32	static
+E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/heap_4.c:267:6:vPortFree	24	static
+E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/heap_4.c:316:8:xPortGetFreeHeapSize	4	static
+E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/heap_4.c:322:8:xPortGetMinimumEverFreeHeapSize	4	static
+E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/heap_4.c:328:6:vPortInitialiseBlocks	4	static
+E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/heap_4.c:334:13:prvHeapInit	24	static
+E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/heap_4.c:382:13:prvInsertBlockIntoFreeList	24	static
+E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/heap_4.c:445:6:vPortGetHeapStats	32	static
