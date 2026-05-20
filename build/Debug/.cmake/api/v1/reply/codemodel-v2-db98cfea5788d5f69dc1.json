@@ -14,7 +14,7 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "stm32cubemx::@768a070a0fe75716b479",
-					"jsonFile" : "target-stm32cubemx-Debug-682d9addb817f9cab3a8.json",
+					"jsonFile" : "target-stm32cubemx-Debug-a3f89c350aeddbcbfa13.json",
 					"name" : "stm32cubemx",
 					"projectIndex" : 0
 				}
@@ -175,14 +175,14 @@
 				{
 					"directoryIndex" : 1,
 					"id" : "STM32_Drivers::@768a070a0fe75716b479",
-					"jsonFile" : "target-STM32_Drivers-Debug-ca469ce75dd9ce968373.json",
+					"jsonFile" : "target-STM32_Drivers-Debug-8e9185ecd64162c13e0d.json",
 					"name" : "STM32_Drivers",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 6,
 					"id" : "app::@66720fd680612643f4de",
-					"jsonFile" : "target-app-Debug-2bb1d012f800d682269f.json",
+					"jsonFile" : "target-app-Debug-28068461f7ef275ff372.json",
 					"name" : "app",
 					"projectIndex" : 0
 				},
@@ -203,7 +203,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "project1_stm32::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-project1_stm32-Debug-0140752d2a1fb1873f64.json",
+					"jsonFile" : "target-project1_stm32-Debug-863a8d963f4e9b197f13.json",
 					"name" : "project1_stm32",
 					"projectIndex" : 0
 				},

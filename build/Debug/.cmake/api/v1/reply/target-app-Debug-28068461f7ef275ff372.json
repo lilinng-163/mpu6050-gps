@@ -72,6 +72,10 @@
 		{
 			"backtrace" : 2,
 			"id" : "etl::@e90c1fe6f63af0cb5c20"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "devices::@d8ea1c4a96fc9577882a"
 		}
 	],
 	"compileGroups" : 
@@ -139,6 +143,10 @@
 				{
 					"backtrace" : 2,
 					"path" : "D:/lib/mcu/C++/etl/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "E:/demo/project1/stm32/project1_stm32/Devices/Inc"
 				}
 			],
 			"language" : "CXX",
@@ -157,6 +165,10 @@
 		{
 			"backtrace" : 2,
 			"id" : "soft_drivers::@e32d1b8d0d138086c1b8"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "devices::@d8ea1c4a96fc9577882a"
 		}
 	],
 	"id" : "app::@66720fd680612643f4de",
@@ -177,6 +189,10 @@
 		{
 			"backtrace" : 2,
 			"id" : "etl::@e90c1fe6f63af0cb5c20"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "devices::@d8ea1c4a96fc9577882a"
 		}
 	],
 	"interfaceLinkLibraries" : 
@@ -196,6 +212,10 @@
 		{
 			"backtrace" : 2,
 			"id" : "etl::@e90c1fe6f63af0cb5c20"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "devices::@d8ea1c4a96fc9577882a"
 		}
 	],
 	"linkLibraries" : 
@@ -215,6 +235,10 @@
 		{
 			"backtrace" : 2,
 			"id" : "etl::@e90c1fe6f63af0cb5c20"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "devices::@d8ea1c4a96fc9577882a"
 		}
 	],
 	"name" : "app",

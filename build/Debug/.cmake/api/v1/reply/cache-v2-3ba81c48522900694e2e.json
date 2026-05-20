@@ -1222,7 +1222,7 @@
 					"value" : "No help, variable specified on the command line."
 				}
 			],
-			"type" : "UNINITIALIZED",
+			"type" : "FILEPATH",
 			"value" : "E:/demo/project1/stm32/project1_stm32/cmake/gcc-arm-none-eabi.cmake"
 		},
 		{

@@ -63,10 +63,10 @@ class mpu6050 : public my_i2c
 {
 public:
     mpu6050(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda);
-    int init(void);    //初始化MPU6050(唤醒+配置)
     int set_device_id(unsigned char _addr_w, unsigned char _addr_r);    //更改设备id(w/r)
     int get_data(mpu6050_data_t &data);    //取出六轴信息
 private:
+    int init(void);    //初始化MPU6050(唤醒+配置)
     unsigned char addr_w = 0xD0;    //默认设备地址(写)是0xD0
     unsigned char addr_r;
 };

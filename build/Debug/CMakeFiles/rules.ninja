@@ -36,7 +36,7 @@ rule C_COMPILER__project1_stm32_unscanned_Debug
 
 rule CXX_EXECUTABLE_LINKER__project1_stm32_Debug
   command = C:\WINDOWS\system32\cmd.exe /C "$PRE_LINK && D:\arm32-none-none-gnueabi-toolchain\arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi\bin\arm-none-eabi-g++.exe $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD"
-  description = Linking CXX executable $TARGET_FILE
+  description = Linking CXX executable $TARGET_FILE; Generating .bin and .hex
   restat = $RESTAT
 
 

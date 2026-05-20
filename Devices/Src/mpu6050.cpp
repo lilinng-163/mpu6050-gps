@@ -7,7 +7,7 @@
 mpu6050::mpu6050(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda)
     : my_i2c("mpu6050_i2c", _gpiox, _scl, _sda)
 {
-    addr_r = (addr_w << 1) | 0x01;
+    addr_r = addr_w | 0x01;
     init();
 }
 
