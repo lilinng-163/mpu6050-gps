@@ -1,9 +1,0 @@
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_it.c:75:6:NMI_Handler	4	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_it.c:90:6:HardFault_Handler	4	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_it.c:105:6:MemManage_Handler	4	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_it.c:120:6:BusFault_Handler	4	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_it.c:135:6:UsageFault_Handler	4	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_it.c:163:6:DebugMon_Handler	4	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_it.c:189:6:SysTick_Handler	8	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_it.c:214:6:USART2_IRQHandler	8	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_it.c:228:6:TIM7_IRQHandler	8	static

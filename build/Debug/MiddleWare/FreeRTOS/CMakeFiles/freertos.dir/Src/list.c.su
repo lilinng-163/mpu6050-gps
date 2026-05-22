@@ -1,5 +1,0 @@
-E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/list.c:48:6:vListInitialise	16	static
-E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/list.c:73:6:vListInitialiseItem	16	static
-E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/list.c:85:6:vListInsertEnd	24	static
-E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/list.c:115:6:vListInsert	24	static
-E:/demo/project1/stm32/project1_stm32/MiddleWare/FreeRTOS/Src/list.c:183:13:uxListRemove	24	static

@@ -1,3 +1,0 @@
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_hal_timebase_tim.c:42:19:HAL_InitTick	64	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_hal_timebase_tim.c:122:6:HAL_SuspendTick	4	static
-E:/demo/project1/stm32/project1_stm32/Core/Src/stm32f1xx_hal_timebase_tim.c:134:6:HAL_ResumeTick	4	static
