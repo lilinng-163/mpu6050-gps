@@ -15,4 +15,4 @@ public:
 private:
     uint16_t period = 20;   //ms
     float max_duty = 12.5;    
-}
+};

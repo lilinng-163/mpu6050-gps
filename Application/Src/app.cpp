@@ -4,10 +4,13 @@
 #include <FreeRTOS/task.h>
 #include <FreeRTOS/projdefs.h>
 #include <FreeRTOS/semphr.h>
+#include <FreeRTOS/queue.h>
 #include <arm_math.h>
 #include "stm32f1xx_hal.h"
+#include "tim.h"
 #include "app.hpp"
 #include "mpu6050.hpp"
+#include "servo_SG90.hpp"
 
 static QueueHandle_t servo_task_binary_handle;
 
@@ -20,11 +23,16 @@ static TaskHandle_t servo_task_control_handle;
 
 static int servo_task_control(void *pvParamters)
 {
+    static servo_sg90 s1(&htim2, TIM_CHANNEL_1, 0);
     while(1)
     {
         if(xSemaphoreTake(servo_task_binary_handle, portMAX_DELAY))
         {
-            
+            for(auto i = 0; i < 100; i++)
+            {
+                s1.set_duty(i);
+                printf("servo duty: %d\r\n", i);
+            }
         }
     }
 
@@ -94,7 +102,7 @@ static int mpu6050_task_calculate_data(void *pvParamters)
 }
 
 const static uint16_t mpu6050_task_collect_data_stack_size = 512;
-const static UBaseType_t mpu6050_task_collect_data_priority = 3;
+const static UBaseType_t mpu6050_task_collect_data_priority = 2;
 static TaskHandle_t mpu6050_task_collect_data_handle;
 
 static int mpu6050_task_collect_data(void *pvParamters)
