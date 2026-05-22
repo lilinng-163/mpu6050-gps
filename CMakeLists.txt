@@ -39,6 +39,7 @@ add_subdirectory(cmake/stm32cubemx)
 
 # Add MiddleWares and Libraries
 add_subdirectory(MiddleWare/FreeRTOS)
+add_subdirectory(Lib/CMSIS-DSP)
 add_subdirectory(Lib/ETL)
 add_subdirectory(Soft_Drivers)
 add_subdirectory(Devices)
@@ -77,6 +78,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     soft_drivers
     devices
     app
+    cmsis-dsp
 )
 
 # Generate .bin and .hex after build

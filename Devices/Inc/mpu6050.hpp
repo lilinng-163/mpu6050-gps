@@ -70,3 +70,5 @@ private:
     unsigned char addr_w = 0xD0;    //默认设备地址(写)是0xD0
     unsigned char addr_r;
 };
+
+int calculate_data(mpu6050_data_t &mpu6050_data);
