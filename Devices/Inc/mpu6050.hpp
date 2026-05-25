@@ -47,6 +47,12 @@ using std::string;
 #define GYRO_RANGE_1000 0x10
 #define GYRO_RANGE_2000 0x18
 
+typedef struct
+{
+  float roll;
+  float pitch;
+  float yaw;
+}three_angels;
 
 typedef struct
 {

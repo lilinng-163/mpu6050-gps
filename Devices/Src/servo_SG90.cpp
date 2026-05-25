@@ -10,10 +10,10 @@ servo_sg90::servo_sg90(TIM_HandleTypeDef *_htim, uint32_t _channel, float _duty)
 }
 int servo_sg90::set_duty(float duty)
 {
-    // if(duty < 0.0f || duty > 12.5f)
-    // {
-    //     return -1;
-    // }
+    if(duty < 0.0f || duty > 12.5f)
+    {
+        return -1;
+    }
 
     auto res = my_pwm::set_duty(duty);
     

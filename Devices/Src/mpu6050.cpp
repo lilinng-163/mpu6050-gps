@@ -74,5 +74,5 @@ int mpu6050::get_data(mpu6050_data_t &data)
 
 int calculate_data(mpu6050_data_t &mpu6050_data)
 {
-    
+    return 0;
 }

@@ -15,7 +15,7 @@ public:
 private:
     string self_name;
     TIM_HandleTypeDef *htim;
-    float duty;
     uint32_t channel;
+    float duty;
     uint32_t arr;
 };
