@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <FreeRTOS/FreeRTOS.h>
 #include <FreeRTOS/task.h>
-#include <FreeRTOS/projdefs.h>
 #include <FreeRTOS/semphr.h>
 #include <FreeRTOS/queue.h>
+#include <etl/vector.h>
 #include <arm_math.h>
 #include "stm32f1xx_hal.h"
 #include "tim.h"
@@ -13,8 +13,28 @@
 #include "mpu6050.hpp"
 #include "servo_SG90.hpp"
 #include "oled_096.hpp"
+#include "led.hpp"
 
 using std::string;
+
+/*---------------------------------led任务相关---------------------------------*/
+
+const static uint16_t led_task_blink_stack_size = 128;
+const static UBaseType_t led_task_blink_priority = 1;
+static TaskHandle_t led_task_blink_handle;
+
+static int led_task_blink(void *pvParamters)
+{
+    static led l1(GPIOB, GPIO_PIN_6);
+    while(1)
+    {
+        l1.on();
+        vTaskDelay(500);
+        l1.off();
+        vTaskDelay(500);
+    }
+    return 0;
+}
 
 /*---------------------------------mpu6050任务相关---------------------------------*/
 
@@ -28,6 +48,8 @@ static mpu6050_data_t mpu6050_data;
 
 //存储roll pitch yaw
 static three_angels angels;
+//互斥锁
+static SemaphoreHandle_t angels_mutex;
 
 const static uint16_t servo_task_control_stack_size = 512;
 const static UBaseType_t servo_task_control_priority = 3;
@@ -47,7 +69,7 @@ static int servo_task_control(void *pvParamters)
     return 0;
 }
 
-const static uint16_t mpu6050_task_calculate_data_stack_size = 512;
+const static uint16_t mpu6050_task_calculate_data_stack_size = 1024;
 const static UBaseType_t mpu6050_task_calculate_data_priority = 4;
 static TaskHandle_t mpu6050_task_calculate_data_handle;
 
@@ -97,19 +119,20 @@ static int mpu6050_task_calculate_data(void *pvParamters)
             float pitch_deg = filter_pitch * 180.0f / PI;
             float yaw_deg   = filter_yaw   * 180.0f / PI;
 
+            //拿锁，赋值,放锁
+            xSemaphoreTake(angels_mutex, portMAX_DELAY);
             angels.roll = roll_deg;
             angels.pitch = pitch_deg;
             angels.yaw = yaw_deg;
+            xSemaphoreGive(angels_mutex);
 
-            printf("%f %f %f\r\n", roll_deg, pitch_deg, yaw_deg);
+            // printf("%f %f %f\r\n", roll_deg, pitch_deg, yaw_deg);
 
             auto free = uxTaskGetStackHighWaterMark(NULL);
             printf("mpu6050_task_calculate_data free: %ld\r\n", free);
 
             //释放信号量给舵机
             xSemaphoreGive(servo_task_binary_handle);
-
-            vTaskDelay(200);
         }
     }
     return 0;
@@ -141,13 +164,21 @@ static TaskHandle_t oled_task_handle;
 static int oled_task(void *pvParameters)
 {
     static oled o1(GPIOB, GPIO_PIN_8, GPIO_PIN_9);
+    static etl::vector<float, 3> v1 = {0};
     o1.clear();
     while(1)
     {
         o1.clear();
-        o1.show_num(angels.roll, 0, 0);
-        o1.show_num(angels.pitch, 0, 16);
-        o1.show_num(angels.yaw, 0, 32);
+        //上锁，赋值，开锁
+        xSemaphoreTake(angels_mutex, portMAX_DELAY);
+        v1[0] = angels.roll;
+        v1[1] = angels.pitch;
+        v1[2] = angels.yaw;
+        xSemaphoreGive(angels_mutex);
+        
+        o1.show_num(v1[0], 0, 0);
+        o1.show_num(v1[1], 0, 16);
+        o1.show_num(v1[2], 0, 32);
         o1.refresh();
 
         auto free = uxTaskGetStackHighWaterMark(NULL);
@@ -203,6 +234,22 @@ static int start_task(void *pvParamters)
                         (void *)NULL,
                         oled_task_priority,
                         &oled_task_handle);
+    if(res == errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY)
+    {
+        return res;
+    }
+
+    res = xTaskCreate((TaskFunction_t)led_task_blink,
+                        (const char *)"led_task_blink",
+                        led_task_blink_stack_size,
+                        (void *)NULL,
+                        led_task_blink_priority,
+                        &led_task_blink_handle);
+    if(res == errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY)
+    {
+        return res;
+    
+    }
     taskEXIT_CRITICAL();
     vTaskDelete(NULL);
     return 0;
@@ -219,6 +266,7 @@ int start_freertos(void)
     {
         printf("mpu6050_task_collect_data create semaphor binary successfully\r\n");
     }
+
     servo_task_binary_handle = xSemaphoreCreateBinary();
     if(servo_task_binary_handle == NULL)
     {
@@ -228,14 +276,29 @@ int start_freertos(void)
     {
         printf("servo_task_control create semaphor binary successfully\r\n");
     }
+
+    //创建互斥锁
+    angels_mutex = xSemaphoreCreateMutex();   
+    if(angels_mutex == NULL)
+    {
+        printf("angels_mutex create fail\r\n");
+    }
+    else
+    {
+        printf("angels_mutex create successfully");
+    }
+
     int res = xTaskCreate((TaskFunction_t)start_task,
                             (const char *)"start_task",
                             start_task_stack_size,
                             (void *)NULL,
                             start_task_priority,
                             &start_task_handle);
+
+                         
     int sum = oled_task_stack_size + servo_task_control_stack_size + mpu6050_task_calculate_data_stack_size + mpu6050_task_collect_data_stack_size;
     printf("total task memory: %dbytes\r\n", sum * 4);
+
     vTaskStartScheduler();
     return res;
 }

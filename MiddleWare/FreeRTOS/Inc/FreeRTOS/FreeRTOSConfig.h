@@ -93,4 +93,7 @@ NVIC value of 255. */
 //二值信号量创建
 #define configSUPPORT_DYNAMIC_ALLOCATION    1
 
+//互斥量支持
+#define configUSE_MUTEXES			1
+
 #endif /* FREERTOS_CONFIG_H */

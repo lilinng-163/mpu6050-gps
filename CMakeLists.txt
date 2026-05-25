@@ -81,9 +81,11 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     cmsis-dsp
 )
 
-# Generate .bin and .hex after build
+# Generate .bin, .hex and disassembly after build
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary  $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_PROJECT_NAME}.bin
     COMMAND ${CMAKE_OBJCOPY} -O ihex    $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_PROJECT_NAME}.hex
-    COMMENT "Generating .bin and .hex"
+    COMMAND ${CMAKE_OBJDUMP} -S -h      $<TARGET_FILE:${CMAKE_PROJECT_NAME}> > ${CMAKE_PROJECT_NAME}.lst
+    COMMAND ${CMAKE_OBJDUMP} -S -d      $<TARGET_FILE:${CMAKE_PROJECT_NAME}> > ${CMAKE_PROJECT_NAME}.dis
+    COMMENT "Generating .bin, .hex and disassembly (.lst / .dis)"
 )
