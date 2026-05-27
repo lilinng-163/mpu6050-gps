@@ -5,7 +5,9 @@
 #include <FreeRTOS/task.h>
 #include <FreeRTOS/semphr.h>
 #include <FreeRTOS/queue.h>
+#include <etl/algorithm.h>
 #include <etl/vector.h>
+#include <etl/circular_buffer.h>
 #include <arm_math.h>
 #include "stm32f1xx_hal.h"
 #include "tim.h"
@@ -14,8 +16,39 @@
 #include "servo_SG90.hpp"
 #include "oled_096.hpp"
 #include "led.hpp"
+#include "tim6_get.hpp"
+#include "uart_cb.hpp"
 
+using namespace etl;
 using std::string;
+
+/*---------------------------------统计cpu相关---------------------------------*/
+
+const static uint16_t cpu_stats_task_stack_size = 512;
+const static UBaseType_t cpu_stats_task_priority = 2;
+static TaskHandle_t cpu_stats_handle;
+
+static int cpu_stats_task(void *pvParamters)
+{
+    static char buf[256];
+
+    while(1)
+    {
+        memset(buf, 0, sizeof(buf));
+
+        vTaskGetRunTimeStats(buf);
+        printf("===========cpu_stats===========\r\n");
+        printf("%s\r\n", buf);
+
+        auto free = uxTaskGetStackHighWaterMark(NULL);
+        printf("cpu_stats_task free: %ld\r\n", free);
+
+        vTaskDelay(1000);
+    }
+
+    return 0;
+}
+
 
 /*---------------------------------led任务相关---------------------------------*/
 
@@ -128,8 +161,8 @@ static int mpu6050_task_calculate_data(void *pvParamters)
 
             // printf("%f %f %f\r\n", roll_deg, pitch_deg, yaw_deg);
 
-            auto free = uxTaskGetStackHighWaterMark(NULL);
-            printf("mpu6050_task_calculate_data free: %ld\r\n", free);
+            // auto free = uxTaskGetStackHighWaterMark(NULL);
+            // printf("mpu6050_task_calculate_data free: %ld\r\n", free);
 
             //释放信号量给舵机
             xSemaphoreGive(servo_task_binary_handle);
@@ -148,10 +181,13 @@ static int mpu6050_task_collect_data(void *pvParamters)
     while(1)
     {
         m1.get_data(mpu6050_data);
-        auto free = uxTaskGetStackHighWaterMark(NULL);
-        printf("mpu6050_task_collect_data free: %ld\r\n", free);
+
+        // auto free = uxTaskGetStackHighWaterMark(NULL);
+        // printf("mpu6050_task_collect_data free: %ld\r\n", free);
+
         xSemaphoreGive(mpu6050_task_binary_handle);
-        vTaskDelay(100);
+
+        vTaskDelay(50);
     }
     return 0;
 }
@@ -181,13 +217,44 @@ static int oled_task(void *pvParameters)
         o1.show_num(v1[2], 0, 32);
         o1.refresh();
 
-        auto free = uxTaskGetStackHighWaterMark(NULL);
-        printf("oled_task free: %ld\r\n", free);
+        // auto free = uxTaskGetStackHighWaterMark(NULL);
+        // printf("oled_task free: %ld\r\n", free);
 
-        vTaskDelay(200);
+        vTaskDelay(500);
     }
     return 0;
 }
+
+/*---------------------------------gps相关---------------------------------*/
+
+const static uint16_t gps_task_stack_size = 256;
+const static UBaseType_t gps_task_priority = 5;
+static TaskHandle_t gps_task_handle;
+
+static int gps_task(void *pvParamters)
+{
+    HAL_UART_Receive_IT(&huart3, &gps_rx_byte, 1);
+    while(1)
+    {
+        string line;
+        gm.dump_raw(line);
+        if(!line.empty())
+        {
+            printf("%s\r\n", line.c_str());
+        }
+        else
+        {
+            printf("gps_task no data\r\n");
+        }
+        auto free = uxTaskGetStackHighWaterMark(NULL);
+        printf("gps_task free: %ld\r\n", free);
+
+        vTaskDelay(1000);
+    }
+    return 0;
+}
+
+
 /*---------------------------------启动任务相关---------------------------------*/
 
 const static uint16_t start_task_stack_size = 128;
@@ -250,6 +317,31 @@ static int start_task(void *pvParamters)
         return res;
     
     }
+
+    res = xTaskCreate((TaskFunction_t)cpu_stats_task,
+                        (const char *)"cpu_stats_task",
+                        cpu_stats_task_stack_size,
+                        (void *)NULL,
+                        cpu_stats_task_priority,
+                        &cpu_stats_handle);
+    if(res == errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY)
+    {
+        return res;
+    
+    }
+
+    res = xTaskCreate((TaskFunction_t)gps_task,
+                        (const char *)"gps_task",
+                        gps_task_stack_size,
+                        (void *)NULL,
+                        gps_task_priority,
+                        &gps_task_handle);
+    if(res == errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY)
+    {
+        return res;
+    
+    }
+                    
     taskEXIT_CRITICAL();
     vTaskDelete(NULL);
     return 0;
@@ -285,7 +377,7 @@ int start_freertos(void)
     }
     else
     {
-        printf("angels_mutex create successfully");
+        printf("angels_mutex create successfully\r\n");
     }
 
     int res = xTaskCreate((TaskFunction_t)start_task,

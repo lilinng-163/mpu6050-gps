@@ -46,7 +46,7 @@
 #define configTICK_RATE_HZ			( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES		( 5 )
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 )
-#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 20 * 1024 ) )
+#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 35 * 1024 ) )
 #define configMAX_TASK_NAME_LEN		( 16 )
 #define configUSE_TRACE_FACILITY	1
 #define configUSE_16_BIT_TICKS		0
@@ -95,5 +95,22 @@ NVIC value of 255. */
 
 //互斥量支持
 #define configUSE_MUTEXES			1
+
+//cpu占用率统计以及相关函数实现
+#define configGENERATE_RUN_TIME_STATS   1
+#define configUSE_STATS_FORMATTING_FUNCTIONS    1
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+extern void vConfigureTimerForRunTimeStats(void);
+extern uint32_t ulGetRunTimeCounterValue(void);
+#ifdef __cplusplus
+}
+#endif
+
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()  vConfigureTimerForRunTimeStats()
+#define portGET_RUN_TIME_COUNTER_VALUE()    ulGetRunTimeCounterValue();
 
 #endif /* FREERTOS_CONFIG_H */

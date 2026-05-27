@@ -3,7 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "D:/lib/mcu/C++/etl/include/**"
             ],
             "defines": [
                 "_DEBUG",
