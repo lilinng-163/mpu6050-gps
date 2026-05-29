@@ -3,3 +3,6 @@ build/
 
 # IDE/编辑器文件
 .vscode/
+
+# GitHub 配置
+.github/
