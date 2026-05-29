@@ -11,6 +11,7 @@
 #include <arm_math.h>
 #include "stm32f1xx_hal.h"
 #include "tim.h"
+#include "iwdg.h"
 #include "app.hpp"
 #include "mpu6050.hpp"
 #include "servo_SG90.hpp"
@@ -18,9 +19,52 @@
 #include "led.hpp"
 #include "tim6_get.hpp"
 #include "uart_cb.hpp"
+#include "task_heart.hpp"
 
 using namespace etl;
 using std::string;
+
+//全局心跳维护
+static volatile uint32_t heart = {0};
+
+/*---------------------------------看门狗相关---------------------------------*/
+const static uint16_t iwdg_task_stack_size = 256;
+const static UBaseType_t iwdg_task_priority = 1;
+static TaskHandle_t iwdg_task_handle;
+
+static int iwdg_task(void *pvParamters)
+{
+    while(1)
+    {
+        vTaskDelay(5000);
+        printf("iwdg check heart=0x%02X\r\n", (unsigned int)heart);
+        if((heart & 0xFF) == 0xFF)
+        {
+            HAL_IWDG_Refresh(&hiwdg);
+            heart = 0x00;
+            printf("dog feed\r\n");
+        }
+        else
+        {
+            printf("heart: 0x%02X miss: ", (unsigned int)heart);
+            if(!(heart & CPU_STATS_TASK_STATUS))              printf("cpu_stats ");
+            if(!(heart & LED_TASK_BLINK_STATUS))              printf("led ");
+            if(!(heart & SERVO_TASK_CONTROL_STATUS))           printf("servo ");
+            if(!(heart & MPU6050_TASK_CALCULATE_DATA_STATUS))  printf("mpu_calc ");
+            if(!(heart & MPU6050_TASK_COLLECT_DATA_STATUS))    printf("mpu_collect ");
+            if(!(heart & OLED_TASK_STATUS))                    printf("oled ");
+            if(!(heart & GPS_TASK_STATUS))                     printf("gps ");
+            if(!(heart & CMT_TASK_STATUS))                     printf("cmt ");
+            printf("\r\n");
+        }
+
+        // auto free = uxTaskGetStackHighWaterMark(NULL);
+        // printf("iwdg free: %ld\r\n", free);
+
+    }
+    return 0;
+}
+
 
 /*---------------------------------统计cpu相关---------------------------------*/
 
@@ -30,7 +74,7 @@ static TaskHandle_t cpu_stats_handle;
 
 static int cpu_stats_task(void *pvParamters)
 {
-    static char buf[256];
+    static char buf[512];
 
     while(1)
     {
@@ -40,8 +84,10 @@ static int cpu_stats_task(void *pvParamters)
         printf("===========cpu_stats===========\r\n");
         printf("%s\r\n", buf);
 
-        auto free = uxTaskGetStackHighWaterMark(NULL);
-        printf("cpu_stats_task free: %ld\r\n", free);
+        // auto free = uxTaskGetStackHighWaterMark(NULL);
+        // printf("cpu_stats_task free: %ld\r\n", free);
+
+        heart |= CPU_STATS_TASK_STATUS;
 
         vTaskDelay(1000);
     }
@@ -65,6 +111,7 @@ static int led_task_blink(void *pvParamters)
         vTaskDelay(500);
         l1.off();
         vTaskDelay(500);
+        heart |= LED_TASK_BLINK_STATUS;
     }
     return 0;
 }
@@ -83,6 +130,8 @@ static mpu6050_data_t mpu6050_data;
 static three_angels angels;
 //互斥锁
 static SemaphoreHandle_t angels_mutex;
+// UART 打印互斥锁 (供 main.c 的 __io_putchar 使用)
+SemaphoreHandle_t uart_mutex;
 
 const static uint16_t servo_task_control_stack_size = 512;
 const static UBaseType_t servo_task_control_priority = 3;
@@ -95,7 +144,7 @@ static int servo_task_control(void *pvParamters)
     {
         if(xSemaphoreTake(servo_task_binary_handle, portMAX_DELAY))
         {
-            
+            heart |= SERVO_TASK_CONTROL_STATUS;
         }
     }
 
@@ -164,6 +213,8 @@ static int mpu6050_task_calculate_data(void *pvParamters)
             // auto free = uxTaskGetStackHighWaterMark(NULL);
             // printf("mpu6050_task_calculate_data free: %ld\r\n", free);
 
+            heart |= MPU6050_TASK_CALCULATE_DATA_STATUS;
+
             //释放信号量给舵机
             xSemaphoreGive(servo_task_binary_handle);
         }
@@ -186,6 +237,8 @@ static int mpu6050_task_collect_data(void *pvParamters)
         // printf("mpu6050_task_collect_data free: %ld\r\n", free);
 
         xSemaphoreGive(mpu6050_task_binary_handle);
+
+        heart |= MPU6050_TASK_COLLECT_DATA_STATUS;
 
         vTaskDelay(50);
     }
@@ -220,6 +273,8 @@ static int oled_task(void *pvParameters)
         // auto free = uxTaskGetStackHighWaterMark(NULL);
         // printf("oled_task free: %ld\r\n", free);
 
+        heart |= OLED_TASK_STATUS;
+
         vTaskDelay(500);
     }
     return 0;
@@ -246,14 +301,87 @@ static int gps_task(void *pvParamters)
         {
             printf("gps_task no data\r\n");
         }
-        auto free = uxTaskGetStackHighWaterMark(NULL);
-        printf("gps_task free: %ld\r\n", free);
+        // auto free = uxTaskGetStackHighWaterMark(NULL);
+        // printf("gps_task free: %ld\r\n", free);
+
+        heart |= GPS_TASK_STATUS;
 
         vTaskDelay(1000);
     }
     return 0;
 }
 
+/*---------------------------------通信相关---------------------------------*/
+
+/*
+    {
+        "gps":
+        {
+            "latitude": 0.000000,
+            "longitude": 0.000000
+        },
+        "angels":
+        {
+            "roll": 144.177063,
+            "pitch": 27.390097,
+            "yaw": -3.429999
+        }
+    }
+*/
+
+const static uint16_t cmt_task_stack_size = 512;
+const static UBaseType_t cmt_task_priprity = 5;
+static TaskHandle_t cmt_task_handle;
+
+//communication
+static int cmt_task(void *pvParamters)
+{
+    vTaskDelay(1000);
+    static string send_buffer;
+    while(1)
+    {
+        xSemaphoreTake(angels_mutex, portMAX_DELAY);
+        float roll = angels.roll;
+        float pitch = angels.pitch;
+        float yaw = angels.yaw;
+        xSemaphoreGive(angels_mutex);
+
+        static gps_data_t gps_xy;
+        gm.get_data(gps_xy);
+
+        send_buffer.resize(256);
+        int len = snprintf(send_buffer.data(), send_buffer.size(), "{\"gps\":{\"latitude\": %f,\"longitude\": %f},"
+                            "\"angels\":{\"roll\": %f,\"pitch\": %f,\"yaw\": %f}}\r\n", 
+                            gps_xy.latitude, gps_xy.longitude, roll, pitch, yaw);
+        if(len > (int)send_buffer.size())                            
+        {
+            send_buffer.resize(len);
+            printf("len > size");
+        }
+        else if(len > 0)
+        {
+            auto res = HAL_UART_Transmit(&huart2, (uint8_t *)send_buffer.data(), send_buffer.size(), HAL_MAX_DELAY);
+            if(res == HAL_ERROR)
+            {
+                printf("send error\r\n");
+            }
+            // printf("len > 0\r\n");
+        }
+        else
+        {
+            printf("snprintf return: %d\r\n", len);
+            break;
+        }
+
+        // auto free = uxTaskGetStackHighWaterMark(NULL);
+        // printf("cmt_task free: %ld\r\n", free); 
+
+        heart |= CMT_TASK_STATUS;
+
+        vTaskDelay(1000);
+    }
+    return 0;
+}
 
 /*---------------------------------启动任务相关---------------------------------*/
 
@@ -341,7 +469,31 @@ static int start_task(void *pvParamters)
         return res;
     
     }
-                    
+
+    res = xTaskCreate((TaskFunction_t)cmt_task,
+                        (const char *)"cmt_task",
+                        cmt_task_stack_size,
+                        (void *)NULL,
+                        cmt_task_priprity,
+                        &cmt_task_handle);
+    if(res == errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY)
+    {
+        return res;
+    
+    }
+       
+    res = xTaskCreate((TaskFunction_t)iwdg_task,
+                        (const char *)"iwdg_task",
+                        iwdg_task_stack_size,
+                        (void *)NULL,
+                        iwdg_task_priority,
+                        &iwdg_task_handle);
+    if(res == errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY)
+    {
+        return res;
+    
+    }
+
     taskEXIT_CRITICAL();
     vTaskDelete(NULL);
     return 0;
@@ -378,6 +530,17 @@ int start_freertos(void)
     else
     {
         printf("angels_mutex create successfully\r\n");
+    }
+
+    // UART 打印互斥锁 (后面 printf 都会用这个锁)
+    uart_mutex = xSemaphoreCreateMutex();
+    if(uart_mutex == NULL)
+    {
+        printf("uart_mutex create fail\r\n");
+    }
+    else
+    {
+        printf("uart_mutex create successfully\r\n");
     }
 
     int res = xTaskCreate((TaskFunction_t)start_task,

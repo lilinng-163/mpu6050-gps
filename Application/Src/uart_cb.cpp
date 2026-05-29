@@ -20,4 +20,8 @@ extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         gm.rx_buf.push((char)gps_rx_byte);
         HAL_UART_Receive_IT(&huart3, &gps_rx_byte, 1);
     }
+    if(huart->Instance == USART2)
+    {
+        
+    }
 }
