@@ -1,121 +1,144 @@
 /**
- * @file    oled_096.cpp
- * @brief   OLED SSD1306 驱动 (128×64) —— I2C 初始化、像素操作、字符串/数字显示
+ * @file    oled_208.cpp
+ * @brief   OLED SH1122 驱动 (256×64, 4-bit 灰度) —— I2C 初始化、像素操作、字符串/数字显示
  * @date    2026-06-06
  *
  * @note    基于软件 I2C (继承 my_i2c)，设备地址 0x78。
- *          支持 8×16 ASCII 字库 (F8x16)。
+ *          4-bit 灰度模式: 每字节存 2 像素，高 nibble=偶数列, 低 nibble=奇数列。
+ *          支持 8×16 ASCII 字库 (F8x16)，单色字库映射到 4-bit 灰度。
  */
 
 #include <string>
 #include <cstdio>
 #include <cstdint>
 #include "stm32f1xx_hal.h"
-#include "oled_096.hpp"
+#include "oled_208.hpp"
 
 using std::string;
 
 //==============================================================================
 //  I2C 底层操作 — 利用基类 my_i2c 的 send_data()
 //
-//   SSD1306 的 I2C 协议:
+//   SH1122 的 I2C 协议:
 //     - 设备地址 (写): 0x78
 //     - 命令模式:  寄存器地址 0x00 → 后续字节均为命令
 //     - 数据模式:  寄存器地址 0x40 → 后续字节均为显示数据
+//
+//   分辨率: 256 × 64, 4-bit 灰度 (每字节存 2 像素)
+//     - 高 nibble = 偶数列像素 (0~15 灰度)
+//     - 低 nibble = 奇数列像素 (0~15 灰度)
 //==============================================================================
 
-int oled::write_cmd(unsigned char cmd)
+int oled_208::write_cmd(unsigned char cmd)
 {
     return send_data(0x78, 0x00, &cmd, 1);
 }
 
-int oled::write_data(unsigned char data)
+// 单字节数据写 (保留兼容)
+int oled_208::write_data(unsigned char data)
 {
     return send_data(0x78, 0x40, &data, 1);
 }
 
-int oled::setcursor(unsigned char x, unsigned char y)
+// 批量数据写 — 一次 I2C 事务发送整行数据 (推荐)
+int oled_208::write_data_bulk(unsigned char *data, int len)
 {
-    write_cmd(0xB0 | y);
+    return send_data(0x78, 0x40, data, len);
+}
+
+int oled_208::setcursor(unsigned char x, unsigned char y)
+{
+    // SH1122: 0xB0 + row (0~63) + column high + column low
+    // x = byte column (0~127), y = row (0~63)
+    write_cmd(0xB0);
+    write_cmd(y);
     write_cmd(0x10 | ((x & 0xF0) >> 4));
     write_cmd(0x00 | (x & 0x0F));
     return 0;
 }
 
 //==============================================================================
-//  构造函数 — OLED SSD1306 初始化序列
+//  构造函数 — OLED SH1122 初始化序列
+//   (参考官方 IIC 例程 STM32F103C8T6)
 //==============================================================================
 
-oled::oled(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda)
-: my_i2c("oled", _gpiox, _scl, _sda), gpiox(_gpiox), scl(_scl), sda(_sda)
+oled_208::oled_208(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda)
+: my_i2c("oled_208", _gpiox, _scl, _sda), gpiox(_gpiox), scl(_scl), sda(_sda)
 {
-    write_cmd(0xAE);    // 关闭显示
+    write_cmd(0xAE);        // 关闭显示
 
-    write_cmd(0xD5);    // 设置显示时钟分频比/振荡器频率
-    write_cmd(0x80);
-
-    write_cmd(0xA8);    // 设置多路复用率
-    write_cmd(0x3F);
-
-    write_cmd(0xD3);    // 设置显示偏移
+    write_cmd(0xB0);        // Row address Mode Setting
     write_cmd(0x00);
+    write_cmd(0x10);        // Set Higher Column Address
+    write_cmd(0x00);        // Set Lower Column Address
 
-    write_cmd(0x40);    // 设置显示开始行
+    write_cmd(0xD5);        // Set Display Clock Divide Ratio / Oscillator Frequency
+    write_cmd(0x50);        // 125 Hz
 
-    write_cmd(0xA1);    // 设置左右方向，0xA1正常 0xA0左右反置
+    write_cmd(0xD9);        // Set Discharge / Precharge Period
+    write_cmd(0x22);
 
-    write_cmd(0xC8);    // 设置上下方向，0xC8正常 0xC0上下反置
+    write_cmd(0x40);        // Set Display Start Line
 
-    write_cmd(0xDA);    // 设置COM引脚硬件配置
-    write_cmd(0x12);
+    write_cmd(0x81);        // Set Contrast Control
+    write_cmd(0xFF);        // 最大对比度
 
-    write_cmd(0x81);    // 设置对比度控制
-    write_cmd(0xCF);
+    write_cmd(0xA1);        // Set Segment Re-map (0xA1=水平镜像 → 左上角)
+    write_cmd(0xC8);        // Set Common Output Scan Direction (0xC8=垂直镜像 → 左上角)
 
-    write_cmd(0xD9);    // 设置预充电周期
-    write_cmd(0xF1);
+    write_cmd(0xD3);        // Set Display Offset (配合 0xC8 时的偏移)
+    write_cmd(0x20);
 
-    write_cmd(0xDB);    // 设置VCOMH取消选择级别
+    write_cmd(0xA4);        // Set Entire Display OFF/ON (A4=正常, A5=全亮)
+    write_cmd(0xA6);        // Set Normal/Reverse Display (A6=正常, A7=反相)
+
+    write_cmd(0xA8);        // Set Multiplex Ratio
+    write_cmd(0x3F);        // 64 MUX
+
+    write_cmd(0xAD);        // DC-DC Setting
+    write_cmd(0x80);        // DC-DC disable (使用外部 VCC 时); 若用内部升压则改 0x8B
+
+    write_cmd(0xDB);        // Set VCOM Deselect Level
     write_cmd(0x30);
 
-    write_cmd(0xA4);    // 设置整个显示打开/关闭
+    write_cmd(0xDC);        // Set VSEGM Level
+    write_cmd(0x30);
 
-    write_cmd(0xA6);    // 设置正常/倒转显示
-
-    write_cmd(0x8D);    // 设置充电泵
-    write_cmd(0x14);
-
-    write_cmd(0xAF);    // 开启显示
+    write_cmd(0x33);        // Set Discharge VSL Level (1.8V)
 
     clear();
-    refresh();          // 首次刷新清屏
+    refresh();
+
+    write_cmd(0xAF);        // 开启显示
 }
 
 //==============================================================================
-//  像素操作
+//  像素操作 — 4-bit 灰度模式
+//   每字节高 nibble = 偶数列, 低 nibble = 奇数列
+//   灰度值 0xF = 全亮, 0x0 = 全灭
 //==============================================================================
 
-int oled::set_pixel(uint16_t x, uint16_t y)
+int oled_208::set_pixel(uint16_t x, uint16_t y)
 {
-    if(x > 127 || y > 63) return 0;
+    if(x >= WIDTH || y >= HEIGHT) return 0;
 
-    unsigned short page = y / 8;
-    unsigned short col  = x;
-    unsigned short idx  = page * 128 + col;
-
-    buffer[idx] |= (1 << (y % 8));
+    unsigned short byte_idx = y * BYTE_PER_ROW + (x / 2);
+    if(x % 2 == 0)
+        buffer[byte_idx] |= 0xF0;   // 偶数列 → 高 nibble 全亮
+    else
+        buffer[byte_idx] |= 0x0F;   // 奇数列 → 低 nibble 全亮
     return 0;
 }
 
-int oled::clear_pixel(uint16_t x, uint16_t y)
+int oled_208::clear_pixel(uint16_t x, uint16_t y)
 {
-    if(x > 127 || y > 63) return 0;
+    if(x >= WIDTH || y >= HEIGHT) return 0;
 
-    unsigned short page = y / 8;
-    unsigned short col  = x;
-    unsigned short idx  = page * 128 + col;
-
-    buffer[idx] &= ~(1 << (y % 8));
+    unsigned short byte_idx = y * BYTE_PER_ROW + (x / 2);
+    if(x % 2 == 0)
+        buffer[byte_idx] &= 0x0F;   // 清除高 nibble
+    else
+        buffer[byte_idx] &= 0xF0;   // 清除低 nibble
     return 0;
 }
 
@@ -123,27 +146,30 @@ int oled::clear_pixel(uint16_t x, uint16_t y)
 //  清屏 & 刷新
 //==============================================================================
 
-int oled::clear(void)
+int oled_208::clear(void)
 {
-    for(auto i = 0; i < 1024; i++)
+    for(auto i = 0; i < ROW_CNT * BYTE_PER_ROW; i++)
         buffer[i] = 0x00;
 
     return 0;
 }
 
-int oled::refresh(void)
+int oled_208::refresh(void)
 {
-    for(auto page = 0; page < 8; page++)
+    for(auto row = 0; row < ROW_CNT; row++)
     {
-        setcursor(0, page);
-        for(auto col = 0; col < 128; col++)
-            write_data(buffer[page * 128 + col]);
+        setcursor(0, row);
+        // 一次 I2C 事务发送整行 128 字节 (避免列指针复位)
+        write_data_bulk(&buffer[row * BYTE_PER_ROW], BYTE_PER_ROW);
     }
     return 0;
 }
 
 //==============================================================================
 //  字符串 & 数字显示
+//   monochrome 字库 → SH1122 4-bit 灰度:
+//    字库每字节 8 bit, 每对 bit 映射为一个 4-bit 像素
+//    bit pair = (b(n+1), b(n)) → nibble: 任一为 1 则输出 0xF
 //==============================================================================
 
 static const unsigned char OLED_F8x16[][16] =
@@ -245,29 +271,55 @@ static const unsigned char OLED_F8x16[][16] =
     {0x00,0x02,0x01,0x01,0x02,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},// ~
 };
 
-int oled::show_string(std::string str, uint16_t x, uint16_t y)
+int oled_208::show_string(std::string str, uint16_t x, uint16_t y)
 {
-    unsigned char page = y / 8;  // 将像素行转换为页号
     for(size_t i = 0; i < str.length(); i++)
     {
         auto idx = str[i] - 32;
-        // 上半部分 (8像素高)
-        for(auto j = 0; j < 8; j++)
-            buffer[(page + 0) * 128 + (x + i * 8 + j)] = OLED_F8x16[idx][j];
-        // 下半部分 (8像素高)
-        for(auto j = 8; j < 16; j++)
-            buffer[(page + 1) * 128 + (x + i * 8 + j - 8)] = OLED_F8x16[idx][j];
+
+        // OLED_F8x16 是垂直字库: 每字节 = 一列 8 像素 (bit7=top)
+        //   字节 0~7  = 上半部分列 0~7 (行 0~7)
+        //   字节 8~15 = 下半部分列 0~7 (行 8~15)
+        //
+        // SH1122 是逐行寻址, 需要按行处理:
+        //   对每个字符行 r (0~15), 遍历列 c (0~7),
+        //   从对应字库字节中取出 bit, 写入 buffer.
+        for(auto r = 0; r < 16; r++)
+        {
+            unsigned short row = y + r;         // buffer 目标行
+            unsigned char  bit = r & 0x07;      // 在当前字库字节中的 bit 位
+
+            for(auto c = 0; c < 8; c++)
+            {
+                unsigned char fb = OLED_F8x16[idx][(r < 8) ? c : (8 + c)];
+                unsigned char on = (fb >> bit) & 0x01;
+
+                unsigned short byte_col = (x + i * 8 + c) / 2;
+                unsigned short idx2 = row * BYTE_PER_ROW + byte_col;
+
+                if(c & 0x01)    // 奇数列 → 低 nibble
+                {
+                    if(on)  buffer[idx2] |= 0x0F;
+                    else    buffer[idx2] &= 0xF0;
+                }
+                else            // 偶数列 → 高 nibble
+                {
+                    if(on)  buffer[idx2] |= 0xF0;
+                    else    buffer[idx2] &= 0x0F;
+                }
+            }
+        }
     }
     return 0;
 }
 
-int oled::show_num(int num, uint16_t x, uint16_t y)
+int oled_208::show_num(int num, uint16_t x, uint16_t y)
 {
     char buf[16];
     snprintf(buf, sizeof(buf), "%d", num);
     return show_string(buf, x, y);
 }
 
-oled::~oled(void)
+oled_208::~oled_208(void)
 {
 }

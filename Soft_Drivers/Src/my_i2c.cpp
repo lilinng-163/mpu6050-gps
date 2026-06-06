@@ -1,8 +1,19 @@
+/**
+ * @file    my_i2c.cpp
+ * @brief   软件 I2C 驱动 —— GPIO 模拟 I2C 时序 (START/STOP/ACK/读写)
+ * @date    2026-06-06
+ *
+ * @note    支持标准 I2C 写/读事务:
+ *          - send_data():    START + 设备地址(W) + 寄存器地址 + 数据... + STOP
+ *          - receive_data(): START + 设备地址(W) + 寄存器地址 + RESTART + 设备地址(R) + 数据... + NACK + STOP
+ */
+
 #include <string>
 #include <cstdint>
 #include "stm32f1xx_hal.h"
 #include "my_i2c.hpp"
 
+/** GPIO 写宏: 简化 SCL/SDA 操作 */
 #define scl_write(x)    HAL_GPIO_WritePin(this->gpiox, this->scl, (GPIO_PinState)x)
 #define sda_write(x)    HAL_GPIO_WritePin(this->gpiox, this->sda, (GPIO_PinState)x)
 

@@ -1,13 +1,24 @@
+/**
+ * @file    mpu6050.cpp
+ * @brief   MPU6050 六轴传感器驱动 —— I2C 初始化、寄存器配置、数据读取
+ * @date    2026-06-06
+ *
+ * @note    基于软件 I2C (继承 my_i2c)，默认设备地址 0xD0 (写)。
+ *          配置: 加速度 ±16g, 陀螺仪 ±2000°/s, DLPF 开启, 采样率 ~800Hz。
+ */
+
 #include <cstdio>
 #include <cstdint>
 #include <etl/vector.h>
 #include "stm32f1xx_hal.h"
 #include "mpu6050.hpp"
 
+// ======================== 构造 ========================
+
 mpu6050::mpu6050(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda)
 : my_i2c("mpu6050_i2c", _gpiox, _scl, _sda)
 {
-    addr_r = addr_w | 0x01;
+    addr_r = addr_w | 0x01;   // 读地址 = 写地址 | 0x01
     init();
 }
 

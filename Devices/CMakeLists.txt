@@ -9,7 +9,8 @@ target_sources(devices PRIVATE
                 ${CMAKE_CURRENT_SOURCE_DIR}/Src/servo_SG90.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/Src/oled_096.cpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/Src/led.cpp
-                ${CMAKE_CURRENT_SOURCE_DIR}/Src/gps.cpp)
+                ${CMAKE_CURRENT_SOURCE_DIR}/Src/gps.cpp
+                ${CMAKE_CURRENT_SOURCE_DIR}/Src/oled_208.cpp)
 target_link_libraries(devices PUBLIC 
                         stm32cubemx 
                         soft_drivers 
